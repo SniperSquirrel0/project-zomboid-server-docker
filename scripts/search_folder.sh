@@ -18,13 +18,13 @@ search_folder() {
                 
                         # Copy maps to map folder
                         source_dirs=("$mod_folder/media/maps"/*)
-                        map_dir=("${HOMEDIR}/pz-dedicated/media/maps")
+                        map_dir=("${STEAMAPP_DIR}/media/maps")
 
                         for source_dir in "${source_dirs[@]}"; do
                             dir_name=$(basename "$source_dir")
                             if [ ! -d "$map_dir/$dir_name" ]; then
                                 echo "Found map(s). Copying..."
-                                cp -r "$mod_folder/media/maps"/* "${HOMEDIR}/pz-dedicated/media/maps"
+                                cp -r "$mod_folder/media/maps"/* "${HOME_DIR}/pz-dedicated/media/maps"
                                 echo "Successfully copied!"
                             fi
                         done
@@ -38,7 +38,7 @@ search_folder() {
                             fi
                         done
                         # Exports to .txt file to add to .ini file in entry.sh
-                            echo -n "$map_list" >> "${HOMEDIR}/maps.txt"
+                            echo -n "$map_list" >> "${HOME_DIR}/maps.txt"
                     fi
                 done
             fi

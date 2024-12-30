@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd ${STEAMAPPDIR}
+cd ${STEAMAPP_DIR}
 
 #####################################
 #                                   #
@@ -8,9 +8,11 @@ cd ${STEAMAPPDIR}
 #                                   #
 #####################################
 
+echo "Who am i? $(whoami)"
+
 if [ "${FORCEUPDATE}" == "1" ]; then
   echo "FORCEUPDATE variable is set, so the server will be updated right now"
-  bash "${STEAMCMDDIR}/steamcmd.sh" +force_install_dir "${STEAMAPPDIR}" +login anonymous +app_update "${STEAMAPPID}" validate +quit
+  bash "${STEAMCMD_DIR}/steamcmd.sh" +force_install_dir "${STEAMAPP_DIR}" +login anonymous +app_update "${STEAMAPPID}" validate +quit
 fi
 
 
@@ -43,8 +45,8 @@ fi
 # Sets the path for the game data cache dir.
 # - Default: ~/Zomboid
 # - Example: /server/Zomboid/data
-if [ -n "${CACHEDIR}" ]; then
-  ARGS="${ARGS} -cachedir=${CACHEDIR}"
+if [ -n "${CACHE_DIR}" ]; then
+  ARGS="${ARGS} -cachedir=${CACHE_DIR}"
 fi
 
 # Option to control where mods are loaded from and the order. Any of the 3 keywords may be left out and may appear in any order.
@@ -84,20 +86,20 @@ fi
 # If preset is set, then the config file is generated when it doesn't exists or SERVERPRESETREPLACE is set to True.
 if [ -n "${SERVERPRESET}" ]; then
   # If preset file doesn't exists then show an error and exit
-  if [ ! -f "${STEAMAPPDIR}/media/lua/shared/Sandbox/${SERVERPRESET}.lua" ]; then
+  if [ ! -f "${STEAMAPP_DIR}/media/lua/shared/Sandbox/${SERVERPRESET}.lua" ]; then
     echo "*** ERROR: the preset ${SERVERPRESET} doesn't exists. Please fix the configuration before start the server ***"
     exit 1
   # If SandboxVars files doesn't exists or replace is true, copy the file
-  elif [ ! -f "${HOMEDIR}/Zomboid/Server/${SERVERNAME}_SandboxVars.lua" ] || [ "${SERVERPRESETREPLACE,,}" == "true" ]; then
+  elif [ ! -f "${HOME_DIR}/Zomboid/Server/${SERVERNAME}_SandboxVars.lua" ] || [ "${SERVERPRESETREPLACE,,}" == "true" ]; then
     echo "*** INFO: New server will be created using the preset ${SERVERPRESET} ***"
-    echo "*** Copying preset file from \"${STEAMAPPDIR}/media/lua/shared/Sandbox/${SERVERPRESET}.lua\" to \"${HOMEDIR}/Zomboid/Server/${SERVERNAME}_SandboxVars.lua\" ***"
-    mkdir -p "${HOMEDIR}/Zomboid/Server/"
-    cp -nf "${STEAMAPPDIR}/media/lua/shared/Sandbox/${SERVERPRESET}.lua" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}_SandboxVars.lua"
-    sed -i "1s/return.*/SandboxVars = \{/" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}_SandboxVars.lua"
+    echo "*** Copying preset file from \"${STEAMAPP_DIR}/media/lua/shared/Sandbox/${SERVERPRESET}.lua\" to \"${HOME_DIR}/Zomboid/Server/${SERVERNAME}_SandboxVars.lua\" ***"
+    mkdir -p "${HOME_DIR}/Zomboid/Server/"
+    cp -nf "${STEAMAPP_DIR}/media/lua/shared/Sandbox/${SERVERPRESET}.lua" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}_SandboxVars.lua"
+    sed -i "1s/return.*/SandboxVars = \{/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}_SandboxVars.lua"
     # Remove carriage return
-    dos2unix "${HOMEDIR}/Zomboid/Server/${SERVERNAME}_SandboxVars.lua"
+    dos2unix "${HOME_DIR}/Zomboid/Server/${SERVERNAME}_SandboxVars.lua"
     # I have seen that the file is created in execution mode (755). Change the file mode for security reasons.
-    chmod 644 "${HOMEDIR}/Zomboid/Server/${SERVERNAME}_SandboxVars.lua"
+    chmod 644 "${HOME_DIR}/Zomboid/Server/${SERVERNAME}_SandboxVars.lua"
   fi
 fi
 
@@ -128,43 +130,43 @@ if [ -n "${STEAMPORT2}" ]; then
 fi
 
 if [ -n "${PASSWORD}" ]; then
-	sed -i "s/Password=.*/Password=${PASSWORD}/" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}.ini"
+	sed -i "s/Password=.*/Password=${PASSWORD}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
 fi
 
 if [ -n "${MOD_IDS}" ]; then
  	echo "*** INFO: Found Mods including ${MOD_IDS} ***"
-	sed -i "s/Mods=.*/Mods=${MOD_IDS}/" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}.ini"
+	sed -i "s/Mods=.*/Mods=${MOD_IDS}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
 fi
 
 if [ -n "${WORKSHOP_IDS}" ]; then
  	echo "*** INFO: Found Workshop IDs including ${WORKSHOP_IDS} ***"
-	sed -i "s/WorkshopItems=.*/WorkshopItems=${WORKSHOP_IDS}/" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}.ini"
+	sed -i "s/WorkshopItems=.*/WorkshopItems=${WORKSHOP_IDS}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
 	
 fi
 
 # Fixes EOL in script file for good measure
 sed -i 's/\r$//' /server/scripts/search_folder.sh
 # Check 'search_folder.sh' script for details
-if [ -e "${HOMEDIR}/pz-dedicated/steamapps/workshop/content/108600" ]; then
+if [ -e "${HOME_DIR}/pz-dedicated/steamapps/workshop/content/108600" ]; then
 
   map_list=""
-  source /server/scripts/search_folder.sh "${HOMEDIR}/pz-dedicated/steamapps/workshop/content/108600"
-  map_list=$(<"${HOMEDIR}/maps.txt")  
-  rm "${HOMEDIR}/maps.txt"
+  source /server/scripts/search_folder.sh "${HOME_DIR}/pz-dedicated/steamapps/workshop/content/108600"
+  map_list=$(<"${HOME_DIR}/maps.txt")  
+  rm "${HOME_DIR}/maps.txt"
 
   if [ -n "${map_list}" ]; then
     echo "*** INFO: Added maps including ${map_list} ***"
-    sed -i "s/Map=.*/Map=${map_list}Muldraugh, KY/" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}.ini"
+    sed -i "s/Map=.*/Map=${map_list}Muldraugh, KY/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
 
     # Checks which added maps have spawnpoints.lua files and adds them to the spawnregions file if they aren't already added
     IFS=";" read -ra strings <<< "$map_list"
     for string in "${strings[@]}"; do
-        if ! grep -q "$string" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}_spawnregions.lua"; then
-          if [ -e "${HOMEDIR}/pz-dedicated/media/maps/$string/spawnpoints.lua" ]; then
+        if ! grep -q "$string" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}_spawnregions.lua"; then
+          if [ -e "${HOME_DIR}/pz-dedicated/media/maps/$string/spawnpoints.lua" ]; then
             result="{ name = \"$string\", file = \"media/maps/$string/spawnpoints.lua\" },"
             sed -i "/function SpawnRegions()/,/return {/ {    /return {/ a\
             \\\t\t$result
-            }" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}_spawnregions.lua"
+            }" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}_spawnregions.lua"
           fi
         fi
     done
@@ -173,9 +175,9 @@ fi
 
 # Fix to a bug in start-server.sh that causes to no preload a library:
 # ERROR: ld.so: object 'libjsig.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
-export LD_LIBRARY_PATH="${STEAMAPPDIR}/jre64/lib:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${STEAMAPP_DIR}/jre64/lib:${LD_LIBRARY_PATH}"
 
 ## Fix the permissions in the data and workshop folders
 chown -R 1000:1000 /home/steam/pz-dedicated/steamapps/workshop /home/steam/Zomboid
 
-su - steam -c "export LD_LIBRARY_PATH=\"${STEAMAPPDIR}/jre64/lib:${LD_LIBRARY_PATH}\" && cd ${STEAMAPPDIR} && pwd && ./start-server.sh ${ARGS}"
+su - steam -c "export LD_LIBRARY_PATH=\"${STEAMAPP_DIR}/jre64/lib:${LD_LIBRARY_PATH}\" && cd ${STEAMAPP_DIR} && pwd && ./start-server.sh ${ARGS}"
