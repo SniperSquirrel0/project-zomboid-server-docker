@@ -1,10 +1,11 @@
 ###########################################################
-# Dockerfile that builds a CSGO Gameserver
+# Dockerfile that builds a ProjectZomboid Gameserver
 ###########################################################
 FROM cm2network/steamcmd:root
 
-LABEL maintainer="daniel.carrasco@electrosoftcloud.com"
+LABEL maintainer="acorn.vault.email@gmail.com"
 
+ENV HOMEDIR ${HOMEDIR}
 ENV STEAMAPPID 380870
 ENV STEAMAPP pz
 ENV STEAMAPPDIR "${HOMEDIR}/${STEAMAPP}-dedicated"
