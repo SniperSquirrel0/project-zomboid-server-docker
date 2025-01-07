@@ -1,0 +1,29 @@
+networks:
+  game_servers:
+    external: true
+
+services:
+  project-zomboid:
+    image: AcornVault/project-zomboid-server
+    restart: unless-stopped
+    container_name: project-zomboid
+    ports:
+      - target: ${PORT}
+        published: ${PORT}
+        protocol: udp
+      - target: ${PLAYER_PORT}
+        published: ${PLAYER_PORT}
+        protocol: udp
+      - target: ${RCON_PORT}
+        published: ${RCON_PORT}
+        protocol: tcp
+    env_file:
+      - ".env"
+    volumes:
+      - ./data/home:/home/steam/Zomboid 
+      - ./data/workshop-mods:/home/steam/pz-dedicated/steamapps/workshop 
+      - /etc/localtime:/etc/localtime:ro
+    networks: 
+      game_servers:
+    dns: 
+      - 9.9.9.9

@@ -133,6 +133,14 @@ if [ -n "${PASSWORD}" ]; then
 	sed -i "s/Password=.*/Password=${PASSWORD}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
 fi
 
+if [ -n "${RCON_PASSWORD}" ]; then
+	sed -i "s/RCONPassword=.*/RCONPassword=${RCON_PASSWORD}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
+fi
+
+if [ -n "${RCON_PORT}" ]; then
+	sed -i "s/RCONPort=.*/RCONPort=${RCON_PORT}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
+fi
+
 if [ -n "${MOD_IDS}" ]; then
  	echo "*** INFO: Found Mods including ${MOD_IDS} ***"
 	sed -i "s/Mods=.*/Mods=${MOD_IDS}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
