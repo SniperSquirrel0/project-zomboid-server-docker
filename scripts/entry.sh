@@ -8,13 +8,12 @@ cd ${STEAMAPP_DIR}
 #                                   #
 #####################################
 
-echo "Who am i? $(whoami)"
+#echo "Who am i? $(whoami)"
 
 if [ "${FORCEUPDATE}" == "1" ]; then
   echo "FORCEUPDATE variable is set, so the server will be updated right now"
   bash "${STEAMCMD_DIR}/steamcmd.sh" +force_install_dir "${STEAMAPP_DIR}" +login anonymous +app_update "${STEAMAPPID}" validate +quit
 fi
-
 
 ######################################
 #                                    #
@@ -129,28 +128,69 @@ if [ -n "${STEAMPORT2}" ]; then
   ARGS="${ARGS} -steamport2 ${STEAMPORT1}"
 fi
 
+########################################
+#                                      #
+# Process the .ini file from variables #
+#                                      #
+########################################
+RCON_PORT="${RCON_PORT:="16269"}"
+RCON_PASSWORD="${RCON_PASSWORD:="${SERVERNAME}_password_${RCON_PORT}"}"
+
+# sets if server is publicly visibile
+if [ -n "${PUBLIC}" ]; then
+	sed -i -E "s/^Public=.*$/Public=${PUBLIC}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
+else
+	sed -i -E "s/^Public=.*$/Public=false/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
+fi
+if [ -n "${PUBLIC_NAME}" ]; then
+	sed -i -E "s/^PublicName=.*$/PublicName=${PUBLIC_NAME}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
+fi
+if [ -n "${PUBLIC_DESCRIPTION}" ]; then
+	sed -i -E "s/^PublicDescription=.*$/PublicDescription=\"${PUBLIC_DESCRIPTION}\"/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
+fi
+
 if [ -n "${PASSWORD}" ]; then
-	sed -i "s/Password=.*/Password=${PASSWORD}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
+	sed -i -E "s/^Password=.*$/Password=${PASSWORD}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
 fi
 
 if [ -n "${RCON_PASSWORD}" ]; then
-	sed -i "s/RCONPassword=.*/RCONPassword=${RCON_PASSWORD}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
+	sed -i -E "s/^RCONPassword=.*$/RCONPassword=${RCON_PASSWORD}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
 fi
 
 if [ -n "${RCON_PORT}" ]; then
-	sed -i "s/RCONPort=.*/RCONPort=${RCON_PORT}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
+	sed -i -E "s/^RCONPort=.*$/RCONPort=${RCON_PORT}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
 fi
 
 if [ -n "${MOD_IDS}" ]; then
  	echo "*** INFO: Found Mods including ${MOD_IDS} ***"
-	sed -i "s/Mods=.*/Mods=${MOD_IDS}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
+    MOD_IDS_SANTIZED="$(printf "$MOD_IDS\n" | sed -e "s/&/\\\&/")"
+	sed -i -E "s/^Mods=.*/Mods=${MOD_IDS_SANTIZED}/g" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
 fi
 
 if [ -n "${WORKSHOP_IDS}" ]; then
  	echo "*** INFO: Found Workshop IDs including ${WORKSHOP_IDS} ***"
-	sed -i "s/WorkshopItems=.*/WorkshopItems=${WORKSHOP_IDS}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
-	
+	sed -i -E "s/^WorkshopItems=.*/WorkshopItems=${WORKSHOP_IDS}/" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
 fi
+
+#############################################
+#                                           #
+# Process the rcon.yaml file from variables #
+#                                           #
+#############################################
+RCON_CONFIG_FILE="${HOME_DIR}/rcon.yaml"
+if [ -f "${RCON_CONFIG_FILE}" ]; then
+    sed -i -E "s/address: \".*$/address: \"127.0.0.1:${RCON_PORT}\"/" "${RCON_CONFIG_FILE}"
+    sed -i -E "s/password: \".*$/password: \"${RCON_PASSWORD}\"/" "${RCON_CONFIG_FILE}" 
+    sed -i -E "s/log: \".*$/log: \"rcon-${SERVERNAME}\"/" "${RCON_CONFIG_FILE}"
+    sed -i -E "s/type: \".*$/type: \"rcon\"/" "${RCON_CONFIG_FILE}"
+    [ -z "$(grep -i "rcon" "${RCON_CONFIG_FILE}")" ] && echo 'alias rcon=rcon -c $HOME/rcon.yaml' >> "${HOME_DIR}/.bashrc"
+fi
+
+###############################
+#                             #
+# Search_folder.sh processing #
+#                             #
+###############################
 
 # Fixes EOL in script file for good measure
 sed -i 's/\r$//' /server/scripts/search_folder.sh
@@ -188,4 +228,5 @@ export LD_LIBRARY_PATH="${STEAMAPP_DIR}/jre64/lib:${LD_LIBRARY_PATH}"
 ## Fix the permissions in the data and workshop folders
 chown -R 1000:1000 /home/steam/pz-dedicated/steamapps/workshop /home/steam/Zomboid
 
-su - steam -c "export LD_LIBRARY_PATH=\"${STEAMAPP_DIR}/jre64/lib:${LD_LIBRARY_PATH}\" && cd ${STEAMAPP_DIR} && pwd && ./start-server.sh ${ARGS}"
+export LD_LIBRARY_PATH=\"${STEAMAPP_DIR}/jre64/lib:${LD_LIBRARY_PATH}\" && cd ${STEAMAPP_DIR} && pwd && ./start-server.sh ${ARGS}
+#su - steam -c "export LD_LIBRARY_PATH=\"${STEAMAPP_DIR}/jre64/lib:${LD_LIBRARY_PATH}\" && cd ${STEAMAPP_DIR} && pwd && ./start-server.sh ${ARGS}"

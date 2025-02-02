@@ -24,21 +24,35 @@ ENV STEAMCMD_DIR="${DATA_DIR}/steamcmd"
 # Install required packages
 RUN apt-get update \
     && apt-get install -y --no-install-recommends --no-install-suggests \
-      dos2unix \
+      dos2unix tar neovim curl\
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* ;
 
-ARG EASY_ADD_VERSION=0.8.8
-ADD ${GITHUB_BASEURL}/itzg/easy-add/releases/download/${EASY_ADD_VERSION}/easy-add_${TARGETOS}_${TARGETARCH}${TARGETVARIANT} /usr/bin/easy-add
-RUN chmod +x /usr/bin/easy-add;
+#ARG EASY_ADD_VERSION=0.8.8
+# ADD ${GITHUB_BASEURL}/itzg/easy-add/releases/download/${EASY_ADD_VERSION}/easy-add_${TARGETOS}_${TARGETARCH}${TARGETVARIANT} /usr/bin/easy-add
+#RUN chmod +x /usr/bin/easy-add;
+ARG INSTALL_DIR="/usr/local/bin"
 
-ARG RCON_CLI_VERSION=1.6.9
-RUN easy-add --var os=${TARGETOS} --var arch=${TARGETARCH}${TARGETVARIANT} \
-  --var version=${RCON_CLI_VERSION} --var app=rcon-cli --file {{.app}} \
-  --from ${GITHUB_BASEURL}/itzg/{{.app}}/releases/download/{{.version}}/{{.app}}_{{.version}}_{{.os}}_{{.arch}}.tar.gz ;
+ARG RCON_VERSION="0.10.3"
+ARG GITUSER="gorcon"
+ARG APP_NAME="rcon"
+ARG ARCH="${TARGETARCH}${TARGETVARIANT}"
+ARG FILE_NAME="${APP_NAME}-${RCON_VERSION}-${ARCH}_${TARGETOS}.tar.gz"
+
+RUN mkdir "/tmp/${APP_NAME}"
+RUN curl -L "${GITHUB_BASEURL}/${GITUSER}/${APP_NAME}-cli/releases/download/v${RCON_VERSION}/${FILE_NAME}" -o "/tmp/$APP_NAME/${FILE_NAME}" \
+    && tar --strip-components=1 -xzf "/tmp/${APP_NAME}/${FILE_NAME}" -C "/tmp/${APP_NAME}" \
+    && cp "/tmp/${APP_NAME}/${APP_NAME}.yaml" "${HOME_DIR}/${APP_NAME}.yaml" \
+    && cp "/tmp/${APP_NAME}/${APP_NAME}" "${INSTALL_DIR}/${APP_NAME}" \
+    && chmod +x "${INSTALL_DIR}/${APP_NAME}" \
+    && rm -rfd "/tmp/${APP_NAME}"
+
+#RUN easy-add --var os=${TARGETOS} --var arch=${TARGETARCH}${TARGETVARIANT} \
+#  --var version=${RCON_VERSION} --var gituser=gorcon --var app=rcon --file {{.app}} \
+#  --from ${GITHUB_BASEURL}/gorcon/rcon-cli/releases/download/v{{.version}}/{{.app}}-{{.version}}-{{.arch}}_{{.os}}.tar.gz ;
 
 # Verify installation
-RUN rcon-cli --help;
+RUN ${APP_NAME} --help
 
 # Ensuring user exists
 RUN mkdir -p "${HOME_DIR}" "${DATA_DIR}" "${STEAMAPP_DIR}" "${STEAMCMD_DIR}" \
@@ -72,6 +86,5 @@ WORKDIR ${DATA_DIR}
 EXPOSE 16261-16262/udp \
        27015/tcp
 
-USER root
 #ENTRYPOINT ["/bin/bash"]
 ENTRYPOINT ["/server/scripts/entry.sh"]
