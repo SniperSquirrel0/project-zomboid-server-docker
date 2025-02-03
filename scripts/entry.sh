@@ -163,7 +163,7 @@ fi
 
 if [ -n "${MOD_IDS}" ]; then
  	echo "*** INFO: Found Mods including ${MOD_IDS} ***"
-    MOD_IDS_SANTIZED="$(printf "$MOD_IDS\n" | sed -e "s/&/\\\&/")"
+    MOD_IDS_SANTIZED="$(printf "$MOD_IDS\n" | sed -e "s/&/\\\&/g")"
 	sed -i -E "s/^Mods=.*/Mods=${MOD_IDS_SANTIZED}/g" "${HOME_DIR}/Zomboid/Server/${SERVERNAME}.ini"
 fi
 
